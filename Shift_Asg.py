@@ -142,10 +142,22 @@ def create_assignments(moffitt_shifts=2, helpdesk_shifts=1):
         print("\n")
 
         for j in range(len(moffitt_asg)):
-            print(name_arr[j] + ": Number " + str(9 - moffitt_pref[j][moffitt_asg[j] - 1]) + " Preference")
+            print(name_arr[j] + ": Number " + str(9 - i - moffitt_pref[j][moffitt_asg[j] - 1]) + " Preference")
             moffitt_pref[j][moffitt_asg[j] - 1] = -100
             capacity.at[29 + moffitt_asg[j], 'Size'] = capacity.at[29 + moffitt_asg[j], 'Size'] - 1
         print("\n")
+
+    moffitt_prop = capacity.loc[capacity['Type'] == 'Moffitt']
+    moffitt_prop = len(moffitt_prop.loc[moffitt_prop['Size'] < 2]) / len(moffitt_prop)
+    print("Moffitt Coverage: " + str(np.round(moffitt_prop * 100)) + "%\n")
+
+    moffitt_available = capacity.loc[capacity['Type'] == 'Moffitt']
+    moffitt_available = moffitt_available.loc[moffitt_available['Size'] > 0]
+    moffitt_available_arr = []
+    for i in range(len(moffitt_available)):
+        moffitt_available_arr.append(
+            str(moffitt_available.iloc[i, 1]) + " (" + str(int(moffitt_available.iloc[i, 2])) + ")")
+    print(str(len(moffitt_available_arr)) + " Available Moffitt Shifts: " + str(moffitt_available_arr) + "\n")
 
     moffitt_asg_total = np.array(moffitt_asg_total)
 
@@ -160,10 +172,22 @@ def create_assignments(moffitt_shifts=2, helpdesk_shifts=1):
         print("\n")
 
         for j in range(len(helpdesk_asg)):
-            print(name_arr[j] + ": Number " + str(9 - helpdesk_pref[j][helpdesk_asg[j] - 1]) + " Preference")
+            print(name_arr[j] + ": Number " + str(9 - i - helpdesk_pref[j][helpdesk_asg[j] - 1]) + " Preference")
             helpdesk_pref[j][helpdesk_asg[j] - 1] = -100
             capacity.at[helpdesk_asg[j] - 1, 'Size'] = capacity.at[helpdesk_asg[j] - 1, 'Size'] - 1
         print("\n")
+
+    helpdesk_prop = capacity.loc[capacity['Type'] == 'Helpdesk']
+    helpdesk_prop = len(helpdesk_prop.loc[helpdesk_prop['Size'] == 0]) / len(helpdesk_prop)
+    print("Helpdesk Coverage: " + str(np.round(helpdesk_prop * 100)) + "%\n")
+
+    helpdesk_available = capacity.loc[capacity['Type'] == 'Helpdesk']
+    helpdesk_available = helpdesk_available.loc[helpdesk_available['Size'] > 0]
+    helpdesk_available_arr = []
+    for i in range(len(helpdesk_available)):
+        helpdesk_available_arr.append(
+            str(helpdesk_available.iloc[i, 1]) + " (" + str(int(helpdesk_available.iloc[i, 2])) + ")")
+    print(str(len(helpdesk_available_arr)) + " Available Helpdesk Shifts: " + str(helpdesk_available_arr) + "\n")
 
     helpdesk_asg_total = np.array(helpdesk_asg_total)
 
