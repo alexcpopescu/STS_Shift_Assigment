@@ -125,7 +125,9 @@ def create_assignments(moffitt_shifts=2, helpdesk_shifts=1):
         {'Type': np.append(np.array(['Helpdesk'] * len(helpdesk_cap)), np.array(['Moffitt'] * len(moffitt_cap))),
          'Time': np.append(helpdesk, moffitt),
          'Size': combined})
-
+    capacity.loc[len(capacity) - 8, 'Size'] = 1
+    capacity.loc[len(capacity) - 16, 'Size'] = 1
+    capacity.loc[5, 'Size'] = 0
     moffitt_asg_total = []
     helpdesk_asg_total = []
     asg_dict = init_asg(raw)
@@ -136,8 +138,8 @@ def create_assignments(moffitt_shifts=2, helpdesk_shifts=1):
           "###############################\n")
 
     for i in range(moffitt_shifts):
-        moffitt_opt = best_assignment(moffitt_pref, moffitt_cap)
-        moffitt_asg = compute_assignments(moffitt_pref, moffitt_cap, moffitt_opt)
+        moffitt_opt = best_assignment(moffitt_pref, capacity['Size'][30:])
+        moffitt_asg = compute_assignments(moffitt_pref, capacity['Size'][30:], moffitt_opt)
         moffitt_asg_total.append(moffitt_asg.tolist())
         print("\n")
 
@@ -145,6 +147,7 @@ def create_assignments(moffitt_shifts=2, helpdesk_shifts=1):
             print(name_arr[j] + ": Number " + str(9 - i - moffitt_pref[j][moffitt_asg[j] - 1]) + " Preference")
             moffitt_pref[j][moffitt_asg[j] - 1] = -100
             capacity.at[29 + moffitt_asg[j], 'Size'] = capacity.at[29 + moffitt_asg[j], 'Size'] - 1
+        print(capacity)
         print("\n")
 
     moffitt_prop = capacity.loc[capacity['Type'] == 'Moffitt']
@@ -156,7 +159,7 @@ def create_assignments(moffitt_shifts=2, helpdesk_shifts=1):
     moffitt_available_arr = []
     for i in range(len(moffitt_available)):
         moffitt_available_arr.append(
-            str(moffitt_available.iloc[i, 1]) + " (" + str(int(moffitt_available.iloc[i, 2])) + ")")
+            str(moffitt_available.iloc[i, 1]) + " (" + str(int(moffitt_available.iloc[i, 0])) + ")")
     print(str(len(moffitt_available_arr)) + " Available Moffitt Shifts: " + str(moffitt_available_arr) + "\n")
 
     moffitt_asg_total = np.array(moffitt_asg_total)
@@ -166,8 +169,9 @@ def create_assignments(moffitt_shifts=2, helpdesk_shifts=1):
           "################################\n")
 
     for i in range(helpdesk_shifts):
-        helpdesk_opt = best_assignment(helpdesk_pref, helpdesk_cap)
-        helpdesk_asg = compute_assignments(helpdesk_pref, helpdesk_cap, helpdesk_opt)
+        print(len(helpdesk_cap), len(capacity['Size'][:30]))
+        helpdesk_opt = best_assignment(helpdesk_pref, capacity['Size'][:30])
+        helpdesk_asg = compute_assignments(helpdesk_pref, capacity['Size'][:30], helpdesk_opt)
         helpdesk_asg_total.append(helpdesk_asg.tolist())
         print("\n")
 
@@ -186,7 +190,7 @@ def create_assignments(moffitt_shifts=2, helpdesk_shifts=1):
     helpdesk_available_arr = []
     for i in range(len(helpdesk_available)):
         helpdesk_available_arr.append(
-            str(helpdesk_available.iloc[i, 1]) + " (" + str(int(helpdesk_available.iloc[i, 2])) + ")")
+            str(helpdesk_available.iloc[i, 1]) + " (" + str(int(helpdesk_available.iloc[i, 0])) + ")")
     print(str(len(helpdesk_available_arr)) + " Available Helpdesk Shifts: " + str(helpdesk_available_arr) + "\n")
 
     helpdesk_asg_total = np.array(helpdesk_asg_total)
