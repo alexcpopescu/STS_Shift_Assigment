@@ -6,6 +6,16 @@ import scipy.optimize as opt
     # Adapted from Data 100 Section Assignment Program #
     ####################################################
     
+    ####################################################
+    #To Do:                                            #
+    #                                                  #
+    #*Create 1-pass assignment: breadth assignment     # 
+    #*Avoid conflicting shift times bw helpdesk/moffitt#                                              
+    #*Pass in priority shift preferences               #
+    #*assignment_type = ['breadth', 'default']         #
+    #*Pass in custom shifts and preferences            #
+    ####################################################
+    
     Author: Alex Popescu
 """
 
@@ -119,15 +129,18 @@ def create_assignments(moffitt_shifts=2, helpdesk_shifts=1):
         {'1.0': '1', '2.0': '2', '3.0': '3', '4.0': '4', '5.0': '5', '6.0': '6'})).values + 1
 
     helpdesk_cap = np.ones(len(helpdesk))
+    helpdesk_cap = pd.DataFrame(
+        {'Time': helpdesk,
+         'Size': helpdesk_cap}
+    )
     moffitt_cap = np.repeat(2, len(moffitt))
-    combined = np.hstack([helpdesk_cap, moffitt_cap])
-    capacity = pd.DataFrame(
-        {'Type': np.append(np.array(['Helpdesk'] * len(helpdesk_cap)), np.array(['Moffitt'] * len(moffitt_cap))),
-         'Time': np.append(helpdesk, moffitt),
-         'Size': combined})
-    capacity.loc[len(capacity) - 8, 'Size'] = 1
-    capacity.loc[len(capacity) - 16, 'Size'] = 1
-    capacity.loc[5, 'Size'] = 0
+    moffitt_cap = pd.DataFrame(
+        {'Time': moffitt,
+         'Size': moffitt_cap}
+    )
+    moffitt_cap.loc[len(moffitt_cap) - 8, 'Size'] = 1
+    moffitt_cap.loc[len(moffitt_cap) - 16, 'Size'] = 1
+    helpdesk_cap.loc[5, 'Size'] = 0
     moffitt_asg_total = []
     helpdesk_asg_total = []
     asg_dict = init_asg(raw)
@@ -138,24 +151,25 @@ def create_assignments(moffitt_shifts=2, helpdesk_shifts=1):
           "###############################\n")
 
     for i in range(moffitt_shifts):
-        moffitt_opt = best_assignment(moffitt_pref, capacity['Size'][30:])
-        moffitt_asg = compute_assignments(moffitt_pref, capacity['Size'][30:], moffitt_opt)
+        moffitt_opt = best_assignment(moffitt_pref, moffitt_cap['Size'])
+        moffitt_asg = compute_assignments(moffitt_pref, moffitt_cap['Size'], moffitt_opt)
         moffitt_asg_total.append(moffitt_asg.tolist())
         print("\n")
 
         for j in range(len(moffitt_asg)):
-            print(name_arr[j] + ": Number " + str(9 - i - moffitt_pref[j][moffitt_asg[j] - 1]) + " Preference")
+            if moffitt_pref[j][moffitt_asg[j] - 1] == -100:
+                print(name_arr[j] + ": Unavailable")
+            else:
+                print(name_arr[j] + ": Number " + str(9 - moffitt_pref[j][moffitt_asg[j] - 1]) + " Preference")
             moffitt_pref[j][moffitt_asg[j] - 1] = -100
-            capacity.at[29 + moffitt_asg[j], 'Size'] = capacity.at[29 + moffitt_asg[j], 'Size'] - 1
-        print(capacity)
+            moffitt_cap.at[moffitt_asg[j] - 1, 'Size'] = moffitt_cap.at[moffitt_asg[j] - 1, 'Size'] - 1
+        print(moffitt_cap)
         print("\n")
 
-    moffitt_prop = capacity.loc[capacity['Type'] == 'Moffitt']
-    moffitt_prop = len(moffitt_prop.loc[moffitt_prop['Size'] < 2]) / len(moffitt_prop)
+    moffitt_prop = len(moffitt_cap.loc[moffitt_cap['Size'] < 2]) / len(moffitt_cap)
     print("Moffitt Coverage: " + str(np.round(moffitt_prop * 100)) + "%\n")
 
-    moffitt_available = capacity.loc[capacity['Type'] == 'Moffitt']
-    moffitt_available = moffitt_available.loc[moffitt_available['Size'] > 0]
+    moffitt_available = moffitt_cap.loc[moffitt_cap['Size'] > 0]
     moffitt_available_arr = []
     for i in range(len(moffitt_available)):
         moffitt_available_arr.append(
@@ -169,24 +183,24 @@ def create_assignments(moffitt_shifts=2, helpdesk_shifts=1):
           "################################\n")
 
     for i in range(helpdesk_shifts):
-        print(len(helpdesk_cap), len(capacity['Size'][:30]))
-        helpdesk_opt = best_assignment(helpdesk_pref, capacity['Size'][:30])
-        helpdesk_asg = compute_assignments(helpdesk_pref, capacity['Size'][:30], helpdesk_opt)
+        helpdesk_opt = best_assignment(helpdesk_pref, helpdesk_cap['Size'])
+        helpdesk_asg = compute_assignments(helpdesk_pref, helpdesk_cap['Size'], helpdesk_opt)
         helpdesk_asg_total.append(helpdesk_asg.tolist())
         print("\n")
 
         for j in range(len(helpdesk_asg)):
-            print(name_arr[j] + ": Number " + str(9 - i - helpdesk_pref[j][helpdesk_asg[j] - 1]) + " Preference")
+            if helpdesk_pref[j][helpdesk_asg[j] - 1] == -100:
+                print(name_arr[j] + ": Unavailable")
+            else:
+                print(name_arr[j] + ": Number " + str(9 - helpdesk_pref[j][helpdesk_asg[j] - 1]) + " Preference")
             helpdesk_pref[j][helpdesk_asg[j] - 1] = -100
-            capacity.at[helpdesk_asg[j] - 1, 'Size'] = capacity.at[helpdesk_asg[j] - 1, 'Size'] - 1
+            helpdesk_cap.at[helpdesk_asg[j] - 1, 'Size'] = helpdesk_cap.at[helpdesk_asg[j] - 1, 'Size'] - 1
         print("\n")
 
-    helpdesk_prop = capacity.loc[capacity['Type'] == 'Helpdesk']
-    helpdesk_prop = len(helpdesk_prop.loc[helpdesk_prop['Size'] == 0]) / len(helpdesk_prop)
+    helpdesk_prop = len(helpdesk_cap.loc[helpdesk_cap['Size'] == 0]) / len(helpdesk_cap)
     print("Helpdesk Coverage: " + str(np.round(helpdesk_prop * 100)) + "%\n")
 
-    helpdesk_available = capacity.loc[capacity['Type'] == 'Helpdesk']
-    helpdesk_available = helpdesk_available.loc[helpdesk_available['Size'] > 0]
+    helpdesk_available = helpdesk_cap.loc[helpdesk_cap['Size'] > 0]
     helpdesk_available_arr = []
     for i in range(len(helpdesk_available)):
         helpdesk_available_arr.append(
