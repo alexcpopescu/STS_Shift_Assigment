@@ -9,10 +9,12 @@ import scipy.optimize as opt
     ####################################################
     #To Do:                                            #
     #                                                  #
-    #*Create 1-pass assignment: breadth assignment     # 
+    #*Create 1-pass assignment: breadth assignment     #
+    #*Implement a reset() method                       # 
     #*Avoid conflicting shift times bw helpdesk/moffitt#                                              
     #*Pass in priority shift preferences               #
     #*assignment_type = ['breadth', 'default']         #
+    #*Create GUI and export to application             #
     #*Pass in custom shifts and preferences            #
     ####################################################
     
